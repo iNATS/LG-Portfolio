@@ -45,7 +45,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) =>
         className="w-full h-full text-left focus:outline-none rounded-[40px] group"
         aria-label={`View details for ${project.title}`}
       >
-        <GlassPane className="p-6 flex flex-col h-full !rounded-[40px] hover:border-white/40 hover:bg-white/10 transition-all duration-300" darker>
+        <GlassPane className="p-6 flex flex-col h-full !rounded-[40px] hover:border-slate-400 dark:hover:border-white/40 hover:bg-white/60 dark:hover:bg-white/10 transition-all duration-300" darker>
           <div className="relative overflow-hidden rounded-2xl mb-5 w-full aspect-[16/9]">
             <img 
               src={project.imageUrl} 
@@ -55,26 +55,26 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) =>
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
           </div>
           
-          <h3 className="text-2xl font-bold text-white mb-2">{project.title}</h3>
-          <p className="text-white/60 text-sm flex-grow mb-6 line-clamp-3">{project.description}</p>
+          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{project.title}</h3>
+          <p className="text-slate-600 dark:text-white/60 text-sm flex-grow mb-6 line-clamp-3">{project.description}</p>
           
           <div className="flex flex-wrap gap-2 mb-6">
             {project.tags.map(tag => (
-              <span key={tag} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-white/80">
+              <span key={tag} className="px-3 py-1.5 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-xs text-slate-700 dark:text-white/80">
                 {tag}
               </span>
             ))}
           </div>
           
-          <div className="flex items-center space-x-4 mt-auto pt-5 border-t border-white/10 w-full">
+          <div className="flex items-center space-x-4 mt-auto pt-5 border-t border-slate-200 dark:border-white/10 w-full">
             {project.link && (
-              <span className="flex items-center text-sm text-white/50 group-hover:text-white transition-colors">
+              <span className="flex items-center text-sm text-slate-500 dark:text-white/50 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Demo
               </span>
             )}
             {project.sourceUrl && (
-              <span className="flex items-center text-sm text-white/50 group-hover:text-white transition-colors">
+              <span className="flex items-center text-sm text-slate-500 dark:text-white/50 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                 <Github className="w-4 h-4 mr-2" />
                 Code
               </span>

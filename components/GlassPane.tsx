@@ -20,10 +20,18 @@ export const GlassPane: React.FC<GlassPaneProps> = ({
   // - Light luminosity even in dark mode (simulating glass catching light)
   // - "Platter" feel
   
-  const baseBg = darker ? 'bg-black/30' : 'bg-white/10';
+  // Dark mode: bg-black/30 or bg-white/10
+  // Light mode: bg-white/70 or bg-white/40
+  const baseBg = darker 
+    ? 'bg-white/60 dark:bg-black/30' 
+    : 'bg-white/40 dark:bg-white/10';
+
   const hoverEffects = interactive 
-    ? 'hover:bg-white/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer' 
+    ? 'hover:bg-white/60 dark:hover:bg-white/20 transition-all duration-300 hover:scale-[1.01] cursor-pointer' 
     : '';
+
+  const textColor = 'text-slate-900 dark:text-white';
+  const borderColor = 'border-white/40 dark:border-white/20';
 
   return (
     <div 
@@ -32,20 +40,19 @@ export const GlassPane: React.FC<GlassPaneProps> = ({
         relative
         backdrop-blur-[80px] 
         backdrop-saturate-[1.5]
-        border border-white/20 
-        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] 
+        ${borderColor}
+        border
+        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]
         rounded-[40px] 
         ${baseBg}
         ${hoverEffects}
-        text-white 
+        ${textColor}
         overflow-hidden
         ${className}
       `}
       style={{
         WebkitBackdropFilter: 'blur(80px) saturate(150%)',
         backdropFilter: 'blur(80px) saturate(150%)',
-        // Subtle top inner highlight to simulate 3D edge lighting
-        boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.5)' 
       }}
     >
       {/* Specular noise texture for realism */}

@@ -9,7 +9,8 @@
     <style>
       body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: #000;
+        /* Default to dark mode styles initially to match existing look, JS will handle toggle */
+        background-color: #000; 
         overflow-x: hidden; /* Allow vertical scroll, prevent horizontal */
         overflow-y: auto;
       }
@@ -21,11 +22,11 @@
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(156, 163, 175, 0.5); /* Neutral gray for both modes */
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(156, 163, 175, 0.7);
       }
       
       /* Smooth scroll behavior for the whole page */
@@ -36,6 +37,7 @@
     </style>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -81,7 +83,9 @@
 }
 </script>
 </head>
-  <body>
+  <body class="dark">
     <div id="root"></div>
+    <!-- CRITICAL FIX: Entry point for the React application -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

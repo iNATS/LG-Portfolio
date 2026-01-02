@@ -16,10 +16,10 @@ export const WhatsAppButton: React.FC = () => {
       className="fixed bottom-8 left-8 z-[90] group"
       aria-label="Chat on WhatsApp"
     >
-      <GlassPane className="flex items-center gap-3 px-5 py-3 !rounded-full bg-black/40 hover:bg-white/20 transition-all duration-300" interactive darker>
+      <GlassPane className="flex items-center gap-3 px-5 py-3 !rounded-full bg-white/80 dark:bg-black/40 hover:scale-105 transition-all duration-300 shadow-xl border border-white/20" interactive darker>
         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-        <MessageCircle size={20} className="text-white" />
-        <span className="text-sm font-medium text-white">Chat on WhatsApp</span>
+        <MessageCircle size={20} className="text-slate-900 dark:text-white" />
+        <span className="text-sm font-medium text-slate-900 dark:text-white">Chat on WhatsApp</span>
       </GlassPane>
     </a>
   );
