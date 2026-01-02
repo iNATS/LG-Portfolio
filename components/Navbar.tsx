@@ -50,7 +50,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -71,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
 
   return (
     <header className="fixed top-6 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto relative z-50">
         <GlassPane className="!rounded-full px-2 py-2 flex items-center gap-2 bg-white/70 dark:bg-black/40 border-white/20 shadow-2xl backdrop-blur-2xl">
           <button
              onClick={scrollToTop}
@@ -101,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
           {/* Language Switcher */}
           <div className="relative" ref={dropdownRef}>
             <button 
-              onClick={() => setLangOpen(!langOpen)}
+              onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen); }}
               className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors
                 ${langOpen ? 'bg-slate-200 dark:bg-white/20' : 'hover:bg-slate-200 dark:hover:bg-white/10'}
                 text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white
@@ -109,11 +108,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
               aria-label="Change Language"
             >
               <Globe size={16} />
-              <span className="sr-only">Change Language</span>
             </button>
             
             {langOpen && (
-              <div className="absolute top-12 right-0 w-40 bg-white dark:bg-black/90 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out] p-1">
+              <div className="absolute top-12 right-0 w-40 bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out] p-1 z-[60]">
                  <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider border-b border-slate-100 dark:border-white/10 mb-1">
                     Select Language
                  </div>
@@ -123,7 +121,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
                     onClick={() => { 
                       setCurrentLang(lang.code); 
                       setLangOpen(false); 
-                      // In a real app, you would trigger a translation context here
                     }}
                     className={`
                       px-3 py-2 text-left text-sm rounded-lg flex items-center justify-between

@@ -1,3 +1,4 @@
+
 import { Project, Skill, PersonalInfo, Testimonial } from './types';
 
 export const OWNER_NAME = "Alex Rivera";
@@ -32,7 +33,11 @@ export const PROJECTS: Project[] = [
     ],
     link: '#',
     sourceUrl: '#',
-    status: 'done'
+    status: 'done',
+    priority: 'high',
+    dueDate: '2023-11-01',
+    budget: 5000,
+    clientName: 'SpaceX'
   },
   {
     id: '2',
@@ -46,7 +51,11 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/ethereal-cart/800/600'
     ],
     link: '#',
-    status: 'in-progress'
+    status: 'in-progress',
+    priority: 'medium',
+    dueDate: '2023-12-15',
+    budget: 3500,
+    clientName: 'Shopify Labs'
   },
   {
     id: '3',
@@ -59,7 +68,11 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/chronos-ui/800/600'
     ],
     sourceUrl: '#',
-    status: 'done'
+    status: 'review',
+    priority: 'high',
+    dueDate: '2023-10-30',
+    budget: 2000,
+    clientName: 'Internal Tool'
   },
   {
     id: '4',
@@ -74,7 +87,11 @@ export const PROJECTS: Project[] = [
     ],
     link: '#',
     sourceUrl: '#',
-    status: 'done'
+    status: 'done',
+    priority: 'low',
+    dueDate: '2023-09-01',
+    budget: 0,
+    clientName: 'Open Source'
   }
 ];
 

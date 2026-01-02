@@ -1,18 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { GlassPane } from '../components/GlassPane';
 import { 
     LayoutDashboard, Briefcase, Mail, Settings, LogOut, 
     Plus, Trash2, Edit2, Save, X, Calendar, User, 
-    MessageSquare, Layers, Search, Send, Bell, CheckCircle, AlertCircle 
+    MessageSquare, Layers, Search, Send, Bell, CheckCircle, AlertCircle,
+    DollarSign, Clock, TrendingUp, BarChart3, PieChart
 } from 'lucide-react';
+import { Project } from '../types';
 
 interface AdminPanelProps {
   onLogout: () => void;
 }
 
-// --- Notification Toast Component ---
+// --- CSS-only Simple Charts ---
+const ProgressBar = ({ value, max, color = "bg-blue-500" }: { value: number, max: number, color?: string }) => (
+    <div className="w-full bg-white/10 rounded-full h-2">
+        <div className={`${color} h-2 rounded-full transition-all duration-500`} style={{ width: `${Math.min(100, (value / max) * 100)}%` }}></div>
+    </div>
+);
+
+// --- Notification Toast ---
 const NotificationToast = () => {
     const { notifications, removeNotification } = useData();
     return (
@@ -40,7 +48,7 @@ const NotificationToast = () => {
 };
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'pm' | 'messages' | 'meetings' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'pm' | 'reports' | 'messages' | 'meetings' | 'settings'>('overview');
   const { 
     personalInfo, updatePersonalInfo, 
     projects, addProject, updateProject, deleteProject, 
@@ -52,9 +60,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
   } = useData();
 
   // --- Sub-View States ---
-  const [portfolioView, setPortfolioView] = useState<'hero'|'skills'|'testimonials'>('hero');
+  const [portfolioView, setPortfolioView] = useState<'hero'|'about'|'socials'|'skills'|'testimonials'>('hero');
   const [mailView, setMailView] = useState<'inbox'|'compose'>('inbox');
-  
+  const [projectForm, setProjectForm] = useState<Partial<Project>>({ title: '', status: 'idea', priority: 'medium', budget: 0, tags: [], dueDate: '' });
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+
   // --- Forms ---
   const [heroForm, setHeroForm] = useState(personalInfo);
   const [settingsForm, setSettingsForm] = useState(settings);
@@ -72,64 +82,169 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     </button>
   );
 
-  // --- Render Logic ---
+  // --- Calculation Helpers ---
+  const totalRevenue = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const activeProjects = projects.filter(p => p.status === 'in-progress' || p.status === 'review');
+  const completedProjects = projects.filter(p => p.status === 'done');
+  const pendingRevenue = activeProjects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  
+  const deadlines = projects
+    .filter(p => p.dueDate && new Date(p.dueDate) > new Date())
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 3);
+
+  // --- Render Functions ---
 
   const renderOverview = () => (
       <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
-          <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
+          <h2 className="text-3xl font-bold text-white">Freelancer Headquarters</h2>
+          
+          {/* Stats Row */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                  { label: "Active Projects", val: projects.length, color: "text-blue-400", bg: "bg-blue-500/10" },
-                  { label: "Unread Messages", val: messages.filter(m => !m.read).length, color: "text-purple-400", bg: "bg-purple-500/10" },
-                  { label: "Upcoming Meetings", val: meetings.length, color: "text-green-400", bg: "bg-green-500/10" },
-                  { label: "Total Skills", val: skills.length, color: "text-orange-400", bg: "bg-orange-500/10" },
-              ].map((stat, i) => (
-                  <div key={i} className={`p-6 rounded-2xl border border-white/5 ${stat.bg}`}>
-                      <h4 className="text-white/50 text-sm font-medium mb-2">{stat.label}</h4>
-                      <p className={`text-4xl font-bold ${stat.color}`}>{stat.val}</p>
+              <div className="p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-green-500/10 to-transparent">
+                  <div className="flex justify-between items-start mb-4">
+                      <div className="p-2 bg-green-500/20 rounded-lg text-green-400"><DollarSign size={20}/></div>
+                      <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded">+12%</span>
                   </div>
-              ))}
+                  <h4 className="text-white/50 text-sm font-medium">Total Pipeline Value</h4>
+                  <p className="text-3xl font-bold text-white">${totalRevenue.toLocaleString()}</p>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-blue-500/10 to-transparent">
+                  <div className="flex justify-between items-start mb-4">
+                      <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400"><Briefcase size={20}/></div>
+                  </div>
+                  <h4 className="text-white/50 text-sm font-medium">Active Projects</h4>
+                  <p className="text-3xl font-bold text-white">{activeProjects.length}</p>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-purple-500/10 to-transparent">
+                  <div className="flex justify-between items-start mb-4">
+                      <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400"><MessageSquare size={20}/></div>
+                  </div>
+                  <h4 className="text-white/50 text-sm font-medium">New Inquiries</h4>
+                  <p className="text-3xl font-bold text-white">{messages.filter(m => !m.read).length}</p>
+              </div>
+
+              <div className="p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-orange-500/10 to-transparent">
+                  <div className="flex justify-between items-start mb-4">
+                      <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400"><Clock size={20}/></div>
+                  </div>
+                  <h4 className="text-white/50 text-sm font-medium">Upcoming Deadlines</h4>
+                  <p className="text-3xl font-bold text-white">{deadlines.length}</p>
+              </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Quick Actions */}
+              {/* Deadline Watch */}
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
-                  <div className="flex gap-4">
-                      <button onClick={() => { setActiveTab('pm'); }} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 text-white transition-colors">
-                          <Plus size={24} className="text-blue-400" />
-                          <span className="text-sm">New Project</span>
-                      </button>
-                      <button onClick={() => { setActiveTab('meetings'); }} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 text-white transition-colors">
-                          <Calendar size={24} className="text-green-400" />
-                          <span className="text-sm">Schedule</span>
-                      </button>
-                      <button onClick={() => { setActiveTab('messages'); setMailView('compose'); }} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 text-white transition-colors">
-                          <Mail size={24} className="text-purple-400" />
-                          <span className="text-sm">Send Email</span>
-                      </button>
+                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><AlertCircle size={20} className="text-red-400"/> Critical Deadlines</h3>
+                  <div className="space-y-4">
+                      {deadlines.length > 0 ? deadlines.map(p => (
+                          <div key={p.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                              <div>
+                                  <h4 className="font-bold text-white">{p.title}</h4>
+                                  <span className="text-xs text-white/50">{p.clientName || 'Internal'}</span>
+                              </div>
+                              <div className="text-right">
+                                  <div className="text-red-400 font-bold text-sm">{new Date(p.dueDate).toLocaleDateString()}</div>
+                                  <span className="text-xs text-white/30 uppercase">Due Date</span>
+                              </div>
+                          </div>
+                      )) : <p className="text-white/30">No upcoming deadlines.</p>}
                   </div>
               </div>
 
-              {/* System Health */}
+              {/* Client Pipeline / Quick Actions */}
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="text-xl font-bold text-white mb-4">System Status</h3>
-                  <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                          <span className="text-white/60">SMTP Connection</span>
-                          <span className={`px-2 py-1 rounded text-xs ${settings.smtpUser ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                              {settings.smtpUser ? 'Configured' : 'Missing Config'}
-                          </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                          <span className="text-white/60">Portfolio Visibility</span>
-                          <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400">Public</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                          <span className="text-white/60">Last Backup</span>
-                          <span className="text-xs text-white/40">Just now</span>
-                      </div>
+                  <h3 className="text-xl font-bold text-white mb-6">Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                      <button onClick={() => { setActiveTab('pm'); setIsProjectModalOpen(true); }} className="p-4 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 flex flex-col items-center gap-2 transition-colors">
+                          <Plus size={24} />
+                          <span>New Project</span>
+                      </button>
+                      <button onClick={() => { setActiveTab('messages'); setMailView('compose'); }} className="p-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 flex flex-col items-center gap-2 transition-colors">
+                          <Send size={24} />
+                          <span>Send Invoice / Email</span>
+                      </button>
+                      <button onClick={() => setActiveTab('reports')} className="p-4 rounded-xl bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 flex flex-col items-center gap-2 transition-colors">
+                          <TrendingUp size={24} />
+                          <span>View Reports</span>
+                      </button>
+                      <button onClick={() => setActiveTab('portfolio')} className="p-4 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-400 flex flex-col items-center gap-2 transition-colors">
+                          <Edit2 size={24} />
+                          <span>Edit Portfolio</span>
+                      </button>
                   </div>
+              </div>
+          </div>
+      </div>
+  );
+
+  const renderPM = () => (
+      <div className="h-full flex flex-col animate-[fadeIn_0.5s_ease-out]">
+          <div className="flex justify-between items-center mb-6">
+              <div>
+                  <h2 className="text-2xl font-bold text-white">Project Management</h2>
+                  <p className="text-white/40 text-sm">Kanban Board & Tracking</p>
+              </div>
+              <button 
+                  onClick={() => setIsProjectModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold"
+              >
+                  <Plus size={16} /> Add Task
+              </button>
+          </div>
+          
+          {/* Status Distribution Chart (CSS only) */}
+          <div className="mb-8 p-4 bg-white/5 rounded-xl border border-white/10 flex gap-4 items-center">
+               <span className="text-xs font-bold text-white/50 uppercase w-24">Project Load</span>
+               <div className="flex-1 flex h-4 rounded-full overflow-hidden">
+                    <div className="bg-blue-500 h-full" style={{ width: `${(projects.filter(p=>p.status==='idea'||p.status==='todo').length / projects.length)*100}%` }} title="Idea/Todo" />
+                    <div className="bg-yellow-500 h-full" style={{ width: `${(projects.filter(p=>p.status==='in-progress').length / projects.length)*100}%` }} title="In Progress" />
+                    <div className="bg-purple-500 h-full" style={{ width: `${(projects.filter(p=>p.status==='review').length / projects.length)*100}%` }} title="Review" />
+                    <div className="bg-green-500 h-full" style={{ width: `${(projects.filter(p=>p.status==='done').length / projects.length)*100}%` }} title="Done" />
+               </div>
+          </div>
+
+          <div className="flex-1 overflow-x-auto">
+              <div className="flex gap-6 min-w-[1000px] h-full pb-4">
+                  {['idea', 'todo', 'in-progress', 'review', 'done'].map((status) => (
+                      <div key={status} className="flex-1 min-w-[280px] bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
+                          <div className="flex justify-between items-center mb-4">
+                              <h3 className="uppercase font-bold text-xs text-white/50 tracking-wider flex items-center gap-2">
+                                  <div className={`w-2 h-2 rounded-full 
+                                      ${status==='done'?'bg-green-500':status==='in-progress'?'bg-yellow-500':status==='review'?'bg-purple-500':'bg-blue-500'}`} 
+                                  />
+                                  {status.replace('-', ' ')}
+                              </h3>
+                              <span className="bg-white/10 text-white text-xs px-2 py-0.5 rounded-full">{projects.filter(p => p.status === status).length}</span>
+                          </div>
+                          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+                              {projects.filter(p => p.status === status).map(p => (
+                                  <div key={p.id} className="bg-[#18181b] p-4 rounded-xl border border-white/5 hover:border-white/20 transition-all group shadow-sm hover:shadow-md">
+                                      {p.imageUrl && <div className="h-24 w-full rounded-lg bg-cover bg-center mb-3 opacity-80" style={{backgroundImage: `url(${p.imageUrl})`}} />}
+                                      <div className="flex justify-between items-start mb-1">
+                                          <h4 className="text-white font-bold text-sm">{p.title}</h4>
+                                          <span className={`text-[10px] px-1.5 py-0.5 rounded border 
+                                              ${p.priority === 'high' ? 'border-red-500/30 text-red-400 bg-red-500/10' : 
+                                                p.priority === 'medium' ? 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10' : 
+                                                'border-blue-500/30 text-blue-400 bg-blue-500/10'}`}>
+                                              {p.priority}
+                                          </span>
+                                      </div>
+                                      <p className="text-white/40 text-xs mb-3 line-clamp-2">{p.description}</p>
+                                      <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                                          <div className="text-xs text-white/30">{p.dueDate ? new Date(p.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'No date'}</div>
+                                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <button onClick={() => deleteProject(p.id)} className="text-red-400 hover:text-red-300"><Trash2 size={14}/></button>
+                                          </div>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  ))}
               </div>
           </div>
       </div>
@@ -137,12 +252,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
 
   const renderPortfolioCMS = () => (
       <div className="h-full flex flex-col animate-[fadeIn_0.5s_ease-out]">
-          <div className="flex gap-4 mb-6 border-b border-white/10 pb-1">
-              {['hero', 'skills', 'testimonials'].map((v) => (
+          <div className="flex gap-4 mb-6 border-b border-white/10 pb-1 overflow-x-auto">
+              {['hero', 'about', 'socials', 'skills', 'testimonials'].map((v) => (
                   <button 
                       key={v}
                       onClick={() => setPortfolioView(v as any)}
-                      className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${portfolioView === v ? 'text-blue-400 border-b-2 border-blue-400' : 'text-white/50 hover:text-white'}`}
+                      className={`px-4 py-2 text-sm font-medium capitalize transition-colors whitespace-nowrap ${portfolioView === v ? 'text-blue-400 border-b-2 border-blue-400' : 'text-white/50 hover:text-white'}`}
                   >
                       {v} Content
                   </button>
@@ -152,7 +267,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
           <div className="flex-1 overflow-y-auto pr-2">
               {portfolioView === 'hero' && (
                   <div className="max-w-2xl space-y-5">
-                      <h3 className="text-xl font-bold text-white mb-4">Hero Section Details</h3>
+                      <h3 className="text-xl font-bold text-white mb-4">Hero Section & Branding</h3>
                       <div className="space-y-2">
                           <label className="text-xs uppercase text-white/40">Display Name</label>
                           <input value={heroForm.name} onChange={e => setHeroForm({...heroForm, name: e.target.value})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
@@ -162,8 +277,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                           <input value={heroForm.title} onChange={e => setHeroForm({...heroForm, title: e.target.value})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
                       </div>
                       <div className="space-y-2">
-                          <label className="text-xs uppercase text-white/40">Bio</label>
-                          <textarea rows={4} value={heroForm.bio} onChange={e => setHeroForm({...heroForm, bio: e.target.value})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                          <label className="text-xs uppercase text-white/40">Avatar URL</label>
+                          <div className="flex gap-4">
+                              <img src={heroForm.avatar} className="w-12 h-12 rounded-full border border-white/20" alt="Preview"/>
+                              <input value={heroForm.avatar} onChange={e => setHeroForm({...heroForm, avatar: e.target.value})} className="flex-1 bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                          </div>
+                      </div>
+                      <button onClick={() => updatePersonalInfo(heroForm)} className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200"><Save size={16} /> Save Changes</button>
+                  </div>
+              )}
+
+              {portfolioView === 'about' && (
+                  <div className="max-w-2xl space-y-5">
+                       <h3 className="text-xl font-bold text-white mb-4">About Me</h3>
+                       <div className="space-y-2">
+                          <label className="text-xs uppercase text-white/40">Short Bio (Hero)</label>
+                          <textarea rows={3} value={heroForm.bio} onChange={e => setHeroForm({...heroForm, bio: e.target.value})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                      </div>
+                      <button onClick={() => updatePersonalInfo(heroForm)} className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200"><Save size={16} /> Save Changes</button>
+                  </div>
+              )}
+
+              {portfolioView === 'socials' && (
+                  <div className="max-w-2xl space-y-5">
+                      <h3 className="text-xl font-bold text-white mb-4">Contact & Socials</h3>
+                      <div className="space-y-2">
+                          <label className="text-xs uppercase text-white/40">Email Address</label>
+                          <input value={heroForm.email} onChange={e => setHeroForm({...heroForm, email: e.target.value})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                      </div>
+                      <div className="space-y-2">
+                          <label className="text-xs uppercase text-white/40">GitHub URL</label>
+                          <input value={heroForm.socials.github} onChange={e => setHeroForm({...heroForm, socials: {...heroForm.socials, github: e.target.value}})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
+                      </div>
+                      <div className="space-y-2">
+                          <label className="text-xs uppercase text-white/40">LinkedIn URL</label>
+                          <input value={heroForm.socials.linkedin} onChange={e => setHeroForm({...heroForm, socials: {...heroForm.socials, linkedin: e.target.value}})} className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none focus:border-blue-500" />
                       </div>
                       <button onClick={() => updatePersonalInfo(heroForm)} className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-lg font-bold hover:bg-gray-200"><Save size={16} /> Save Changes</button>
                   </div>
@@ -217,43 +365,74 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
       </div>
   );
 
-  const renderPM = () => (
-      <div className="h-full flex flex-col animate-[fadeIn_0.5s_ease-out]">
-          <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Project Management</h2>
-              <button 
-                  onClick={() => addProject({ id: Date.now().toString(), title: "New Task", description: "Details...", tags: ["Web"], imageUrl: "https://picsum.photos/800/600", status: 'idea' })}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg"
-              >
-                  <Plus size={16} /> Add Task
-              </button>
+  const renderReports = () => (
+      <div className="h-full animate-[fadeIn_0.5s_ease-out]">
+          <h2 className="text-2xl font-bold text-white mb-8">Business Reports</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Financial Report */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><DollarSign size={18} className="text-green-400"/> Financial Summary</h3>
+                  <div className="space-y-6">
+                      <div>
+                          <div className="flex justify-between mb-2">
+                              <span className="text-white/60 text-sm">Revenue Realized (Completed)</span>
+                              <span className="text-white font-bold">${(totalRevenue - pendingRevenue).toLocaleString()}</span>
+                          </div>
+                          <ProgressBar value={totalRevenue - pendingRevenue} max={totalRevenue} color="bg-green-500" />
+                      </div>
+                      <div>
+                          <div className="flex justify-between mb-2">
+                              <span className="text-white/60 text-sm">Pipeline Value (Active)</span>
+                              <span className="text-white font-bold">${pendingRevenue.toLocaleString()}</span>
+                          </div>
+                          <ProgressBar value={pendingRevenue} max={totalRevenue} color="bg-blue-500" />
+                      </div>
+                  </div>
+                  <div className="mt-8 pt-6 border-t border-white/10 flex justify-between">
+                      <span className="text-white/40 text-sm">Average Project Value</span>
+                      <span className="text-white font-bold">${projects.length > 0 ? Math.round(totalRevenue / projects.length).toLocaleString() : 0}</span>
+                  </div>
+              </div>
+
+              {/* Workload Report */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><Briefcase size={18} className="text-blue-400"/> Workload Distribution</h3>
+                   <div className="space-y-4">
+                       <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                           <span className="text-white/70">Development</span>
+                           <span className="text-white font-bold">65%</span>
+                       </div>
+                       <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                           <span className="text-white/70">Design</span>
+                           <span className="text-white font-bold">25%</span>
+                       </div>
+                       <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                           <span className="text-white/70">Meetings & Admin</span>
+                           <span className="text-white font-bold">10%</span>
+                       </div>
+                   </div>
+              </div>
           </div>
           
-          <div className="flex-1 overflow-x-auto">
-              <div className="flex gap-6 min-w-[800px] h-full pb-4">
-                  {['idea', 'in-progress', 'done'].map((status) => (
-                      <div key={status} className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col">
-                          <div className="flex justify-between items-center mb-4">
-                              <h3 className="uppercase font-bold text-xs text-white/50 tracking-wider">{status.replace('-', ' ')}</h3>
-                              <span className="bg-white/10 text-white text-xs px-2 py-0.5 rounded-full">{projects.filter(p => p.status === status).length}</span>
-                          </div>
-                          <div className="flex-1 overflow-y-auto space-y-3">
-                              {projects.filter(p => p.status === status).map(p => (
-                                  <div key={p.id} className="bg-[#111] p-3 rounded-xl border border-white/10 hover:border-white/30 transition-colors group">
-                                      <h4 className="text-white font-medium text-sm mb-1">{p.title}</h4>
-                                      <div className="flex justify-between items-center mt-3">
-                                          <span className="text-[10px] bg-white/10 text-white/60 px-2 py-0.5 rounded">{p.tags[0]}</span>
-                                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                              {status !== 'done' && <button onClick={() => updateProject({...p, status: status === 'idea' ? 'in-progress' : 'done'})} className="p-1.5 bg-green-500/20 text-green-400 rounded"><CheckCircle size={12}/></button>}
-                                              <button onClick={() => deleteProject(p.id)} className="p-1.5 bg-red-500/20 text-red-400 rounded"><Trash2 size={12}/></button>
-                                          </div>
-                                      </div>
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                  ))}
-              </div>
+          <div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-2xl">
+               <h3 className="text-lg font-bold text-white mb-4">Client Acquisition</h3>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                   <div className="text-center p-4">
+                       <div className="text-4xl font-bold text-white mb-1">{messages.length}</div>
+                       <div className="text-xs text-white/40 uppercase">Total Inquiries</div>
+                   </div>
+                   <div className="text-center p-4 border-l border-white/10">
+                       <div className="text-4xl font-bold text-green-400 mb-1">{activeProjects.length + completedProjects.length}</div>
+                       <div className="text-xs text-white/40 uppercase">Projects Won</div>
+                   </div>
+                   <div className="text-center p-4 border-l border-white/10">
+                       <div className="text-4xl font-bold text-blue-400 mb-1">
+                           {messages.length > 0 ? Math.round(((activeProjects.length + completedProjects.length) / messages.length) * 100) : 0}%
+                       </div>
+                       <div className="text-xs text-white/40 uppercase">Conversion Rate</div>
+                   </div>
+               </div>
           </div>
       </div>
   );
@@ -398,20 +577,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">V</div>
                 <span className="font-bold text-lg tracking-wide">Vision Admin</span>
             </div>
-            <span className="text-xs text-white/30 ml-11">v2.0.0 Pro</span>
+            <span className="text-xs text-white/30 ml-11">v3.1.0 Freelance OS</span>
         </div>
         
         <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
           <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 px-4 mt-4">Main</div>
           <SidebarItem id="overview" icon={LayoutDashboard} label="Dashboard" />
-          <SidebarItem id="portfolio" icon={Layers} label="Portfolio Manager" />
+          <SidebarItem id="reports" icon={TrendingUp} label="Reports" />
           
           <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 px-4 mt-6">Work</div>
-          <SidebarItem id="pm" icon={Briefcase} label="Projects & Tasks" />
+          <SidebarItem id="pm" icon={Briefcase} label="Projects" />
           <SidebarItem id="meetings" icon={Calendar} label="Meetings" />
+          <SidebarItem id="messages" icon={Mail} label="Inbox" />
           
-          <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 px-4 mt-6">System</div>
-          <SidebarItem id="messages" icon={Mail} label="Inbox & SMTP" />
+          <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 px-4 mt-6">Site</div>
+          <SidebarItem id="portfolio" icon={Layers} label="CMS" />
           <SidebarItem id="settings" icon={Settings} label="Settings" />
         </nav>
 
@@ -437,7 +617,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         {/* Top Header */}
         <header className="h-16 border-b border-white/5 flex justify-between items-center px-8 bg-white/[0.02] backdrop-blur-sm">
             <div className="flex items-center gap-4">
-                <h1 className="text-lg font-semibold capitalize tracking-tight text-white/90">{activeTab.replace('pm', 'Project Management')}</h1>
+                <h1 className="text-lg font-semibold capitalize tracking-tight text-white/90">{activeTab.replace('pm', 'Projects')}</h1>
             </div>
             <div className="flex items-center gap-4">
                 <div className="relative">
@@ -451,15 +631,65 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'portfolio' && renderPortfolioCMS()}
             {activeTab === 'pm' && renderPM()}
+            {activeTab === 'reports' && renderReports()}
             {activeTab === 'messages' && renderMessages()}
             {activeTab === 'meetings' && renderMeetings()}
             {activeTab === 'settings' && renderSettings()}
         </div>
       </div>
+
+      {/* Project Modal */}
+      {isProjectModalOpen && (
+        <div className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg p-6 animate-[fadeIn_0.3s_ease-out]">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-white">Add New Project</h3>
+                    <button onClick={() => setIsProjectModalOpen(false)} className="text-white/50 hover:text-white"><X size={20}/></button>
+                </div>
+                <div className="space-y-4">
+                    <input placeholder="Project Title" className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.title} onChange={e => setProjectForm({...projectForm, title: e.target.value})} />
+                    <textarea placeholder="Description" className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" rows={3} value={projectForm.description} onChange={e => setProjectForm({...projectForm, description: e.target.value})} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <select className="bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.priority} onChange={e => setProjectForm({...projectForm, priority: e.target.value as any})}>
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                         <select className="bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.status} onChange={e => setProjectForm({...projectForm, status: e.target.value as any})}>
+                            <option value="idea">Idea</option>
+                            <option value="todo">Todo</option>
+                            <option value="in-progress">In Progress</option>
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs text-white/40 uppercase">Budget ($)</label>
+                            <input type="number" className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.budget} onChange={e => setProjectForm({...projectForm, budget: parseInt(e.target.value)})} />
+                        </div>
+                         <div className="space-y-1">
+                            <label className="text-xs text-white/40 uppercase">Due Date</label>
+                            <input type="date" className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.dueDate} onChange={e => setProjectForm({...projectForm, dueDate: e.target.value})} />
+                        </div>
+                    </div>
+                     <input placeholder="Image URL (e.g. https://picsum.photos/800/600)" className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-white outline-none" value={projectForm.imageUrl} onChange={e => setProjectForm({...projectForm, imageUrl: e.target.value})} />
+                    <button 
+                        onClick={() => {
+                            addProject({ ...projectForm, id: Date.now().toString(), tags: ['New'] } as Project);
+                            setIsProjectModalOpen(false);
+                            setProjectForm({ title: '', status: 'idea', priority: 'medium', budget: 0, tags: [], dueDate: '' });
+                        }}
+                        className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 mt-2"
+                    >
+                        Create Project
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
