@@ -31,7 +31,8 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/nebula-detail2/800/600'
     ],
     link: '#',
-    sourceUrl: '#'
+    sourceUrl: '#',
+    status: 'done'
   },
   {
     id: '2',
@@ -44,7 +45,8 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/ethereal-prod/800/600',
       'https://picsum.photos/seed/ethereal-cart/800/600'
     ],
-    link: '#'
+    link: '#',
+    status: 'in-progress'
   },
   {
     id: '3',
@@ -56,7 +58,8 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/chronos/800/600',
       'https://picsum.photos/seed/chronos-ui/800/600'
     ],
-    sourceUrl: '#'
+    sourceUrl: '#',
+    status: 'done'
   },
   {
     id: '4',
@@ -70,7 +73,8 @@ export const PROJECTS: Project[] = [
       'https://picsum.photos/seed/visionary-dark/800/600'
     ],
     link: '#',
-    sourceUrl: '#'
+    sourceUrl: '#',
+    status: 'done'
   }
 ];
 

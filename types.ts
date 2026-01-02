@@ -1,3 +1,4 @@
+
 export interface Project {
   id: string;
   title: string;
@@ -7,6 +8,7 @@ export interface Project {
   gallery?: string[];
   link?: string;
   sourceUrl?: string;
+  status: 'idea' | 'todo' | 'in-progress' | 'done'; // Added for PM system
 }
 
 export interface Skill {
@@ -46,4 +48,29 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: number;
+}
+
+// New Types for Admin Features
+export interface AppSettings {
+  smtpHost: string;
+  smtpPort: string;
+  smtpUser: string;
+  smtpPass: string;
+  enableNotifications: boolean;
+  siteName: string;
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  attendees: string;
+  link?: string;
+}
+
+export interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
 }

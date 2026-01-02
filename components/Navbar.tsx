@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { GlassPane } from './GlassPane';
-import { User, Briefcase, Cpu, Mail, Globe, Command, Sun, Moon } from 'lucide-react';
+import { User, Briefcase, Cpu, Mail, Globe, Command, Sun, Moon, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface NavLinkProps {
@@ -36,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState('EN');
   const { theme, toggleTheme } = useTheme();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const scrollTo = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -48,10 +50,23 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const languages = [
     { code: 'EN', label: 'English' },
+    { code: 'ES', label: 'Español' },
     { code: 'FR', label: 'Français' },
-    { code: 'AR', label: 'العربية' },
+    { code: 'DE', label: 'Deutsch' },
+    { code: 'JP', label: '日本語' },
   ];
 
   return (
@@ -84,27 +99,41 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
           <div className="h-5 w-[1px] bg-slate-900/10 dark:bg-white/10 mx-1"></div>
 
           {/* Language Switcher */}
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setLangOpen(!langOpen)}
-              className="w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors
+                ${langOpen ? 'bg-slate-200 dark:bg-white/20' : 'hover:bg-slate-200 dark:hover:bg-white/10'}
+                text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white
+              `}
+              aria-label="Change Language"
             >
               <Globe size={16} />
               <span className="sr-only">Change Language</span>
             </button>
             
             {langOpen && (
-              <div className="absolute top-12 right-0 w-32 bg-white dark:bg-black/80 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out]">
+              <div className="absolute top-12 right-0 w-40 bg-white dark:bg-black/90 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out] p-1">
+                 <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider border-b border-slate-100 dark:border-white/10 mb-1">
+                    Select Language
+                 </div>
                 {languages.map(lang => (
                   <button
                     key={lang.code}
-                    onClick={() => { setCurrentLang(lang.code); setLangOpen(false); }}
-                    className={`px-4 py-2 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors 
+                    onClick={() => { 
+                      setCurrentLang(lang.code); 
+                      setLangOpen(false); 
+                      // In a real app, you would trigger a translation context here
+                    }}
+                    className={`
+                      px-3 py-2 text-left text-sm rounded-lg flex items-center justify-between
                       ${currentLang === lang.code 
-                        ? 'text-slate-900 dark:text-white font-bold' 
-                        : 'text-slate-600 dark:text-white/70'}`}
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' 
+                        : 'text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/10'}
+                    `}
                   >
-                    {lang.label}
+                    <span>{lang.label}</span>
+                    {currentLang === lang.code && <Check size={12} />}
                   </button>
                 ))}
               </div>
@@ -114,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="w-9 h-9 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-colors"
             aria-label="Toggle Theme"
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
