@@ -1,10 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
-import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS, OWNER_ROLE } from '../constants';
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS_DATA, OWNER_ROLE } from '../constants';
 
 // Group skills by category for better context in the prompt
-const skillsByCategory = SKILLS.reduce((acc, skill) => {
+// Use 'en' as default for system instruction context
+const skillsByCategory = SKILLS_DATA('en').reduce((acc, skill) => {
   if (!acc[skill.category]) acc[skill.category] = [];
   acc[skill.category].push(skill.name);
   return acc;
@@ -15,16 +14,17 @@ const formattedSkills = Object.entries(skillsByCategory)
   .join('\n');
 
 // Construct a system prompt based on the portfolio data
+// Using English properties for the system instructions to avoid [object Object] output
 const SYSTEM_INSTRUCTION = `
-You are an AI assistant for ${OWNER_NAME}'s portfolio website. 
-Your role is to answer questions about ${OWNER_NAME} professionally and concisely, acting as their virtual representative.
+You are an AI assistant for ${OWNER_NAME.en}'s portfolio website. 
+Your role is to answer questions about ${OWNER_NAME.en} professionally and concisely, acting as their virtual representative.
 
-Here is the context about ${OWNER_NAME}:
-Role: ${OWNER_ROLE}
-Bio: ${OWNER_BIO}
+Here is the context about ${OWNER_NAME.en}:
+Role: ${OWNER_ROLE.en}
+Bio: ${OWNER_BIO.en}
 
 Projects:
-${PROJECTS.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
+${PROJECTS('en').map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
 
 Skills:
 ${formattedSkills}
@@ -40,6 +40,9 @@ export const generateResponse = async (userMessage: string): Promise<string> => 
       return "I'm sorry, my connection to the neural core (API Key) is missing. Please check the configuration.";
     }
 
+    // Initialize the AI client right before use as per guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: userMessage,
@@ -48,6 +51,7 @@ export const generateResponse = async (userMessage: string): Promise<string> => 
       }
     });
 
+    // Access .text property directly as per the latest SDK spec
     return response.text || "I processed that, but couldn't generate a verbal response.";
   } catch (error) {
     console.error("Gemini API Error:", error);

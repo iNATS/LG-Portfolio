@@ -8,12 +8,10 @@ export interface Project {
   gallery?: string[];
   link?: string;
   sourceUrl?: string;
-  // PM Features
-  status: 'idea' | 'todo' | 'in-progress' | 'review' | 'done';
-  priority: 'low' | 'medium' | 'high';
-  dueDate: string;
-  budget: number;
-  clientName?: string;
+  status: 'idea' | 'todo' | 'in-progress' | 'done'; // Added for PM system
+  priority?: 'low' | 'medium' | 'high';
+  budget?: number;
+  dueDate?: string;
 }
 
 export interface Skill {
@@ -55,6 +53,7 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+// New Types for Admin Features
 export interface AppSettings {
   smtpHost: string;
   smtpPort: string;

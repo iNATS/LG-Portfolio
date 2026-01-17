@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GlassPane } from './GlassPane';
 import { User, Briefcase, Cpu, Mail, Globe, Command, Sun, Moon, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { UI_STRINGS } from '../constants';
 
 interface NavLinkProps {
   href: string;
@@ -35,9 +37,10 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
   const [langOpen, setLangOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState('EN');
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, isRTL } = useLanguage();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const strings = UI_STRINGS[language];
 
   const scrollTo = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,16 +64,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
   }, []);
 
   const languages = [
-    { code: 'EN', label: 'English' },
-    { code: 'ES', label: 'Español' },
-    { code: 'FR', label: 'Français' },
-    { code: 'DE', label: 'Deutsch' },
-    { code: 'JP', label: '日本語' },
+    { code: 'en', label: 'English' },
+    { code: 'ar', label: 'العربية' },
   ];
 
   return (
-    <header className="fixed top-6 left-0 right-0 z-50 flex justify-center pointer-events-none px-4">
-      <div className="pointer-events-auto relative z-50">
+    <header className={`fixed top-6 left-0 right-0 z-50 flex justify-center pointer-events-none px-4`}>
+      <div className="pointer-events-auto">
         <GlassPane className="!rounded-full px-2 py-2 flex items-center gap-2 bg-white/70 dark:bg-black/40 border-white/20 shadow-2xl backdrop-blur-2xl">
           <button
              onClick={scrollToTop}
@@ -88,56 +88,55 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection }) => {
           <div className="h-5 w-[1px] bg-slate-900/10 dark:bg-white/10 mx-1"></div>
 
           <nav className="flex items-center space-x-1">
-            <NavLink href="#about" label="About" isActive={activeSection === 'about'} onClick={scrollTo('#about')} icon={<User size={16} />} />
-            <NavLink href="#projects" label="Projects" isActive={activeSection === 'projects'} onClick={scrollTo('#projects')} icon={<Briefcase size={16} />} />
-            <NavLink href="#skills" label="Skills" isActive={activeSection === 'skills'} onClick={scrollTo('#skills')} icon={<Cpu size={16} />} />
-            <NavLink href="#contact" label="Contact" isActive={activeSection === 'contact'} onClick={scrollTo('#contact')} icon={<Mail size={16} />} />
+            <NavLink href="#about" label={strings.about} isActive={activeSection === 'about'} onClick={scrollTo('#about')} icon={<User size={16} />} />
+            <NavLink href="#projects" label={strings.projects} isActive={activeSection === 'projects'} onClick={scrollTo('#projects')} icon={<Briefcase size={16} />} />
+            <NavLink href="#skills" label={strings.skills} isActive={activeSection === 'skills'} onClick={scrollTo('#skills')} icon={<Cpu size={16} />} />
+            <NavLink href="#contact" label={strings.contact} isActive={activeSection === 'contact'} onClick={scrollTo('#contact')} icon={<Mail size={16} />} />
           </nav>
 
-          {/* Divider */}
           <div className="h-5 w-[1px] bg-slate-900/10 dark:bg-white/10 mx-1"></div>
 
           {/* Language Switcher */}
           <div className="relative" ref={dropdownRef}>
             <button 
-              onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen); }}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors
+              onClick={() => setLangOpen(!langOpen)}
+              className={`px-3 h-9 rounded-full flex items-center justify-center gap-1 transition-colors
                 ${langOpen ? 'bg-slate-200 dark:bg-white/20' : 'hover:bg-slate-200 dark:hover:bg-white/10'}
                 text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white
               `}
               aria-label="Change Language"
             >
               <Globe size={16} />
+              <span className="text-xs font-bold uppercase">{language}</span>
             </button>
             
             {langOpen && (
-              <div className="absolute top-12 right-0 w-40 bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out] p-1 z-[60]">
+              <div className={`absolute top-12 ${isRTL ? 'left-0' : 'right-0'} w-40 bg-white dark:bg-black/90 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col animate-[fadeIn_0.2s_ease-out] p-1`}>
                  <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider border-b border-slate-100 dark:border-white/10 mb-1">
-                    Select Language
+                    {strings.selectLanguage}
                  </div>
                 {languages.map(lang => (
                   <button
                     key={lang.code}
                     onClick={() => { 
-                      setCurrentLang(lang.code); 
+                      setLanguage(lang.code as any); 
                       setLangOpen(false); 
                     }}
                     className={`
                       px-3 py-2 text-left text-sm rounded-lg flex items-center justify-between
-                      ${currentLang === lang.code 
+                      ${language === lang.code 
                         ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' 
                         : 'text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/10'}
                     `}
                   >
                     <span>{lang.label}</span>
-                    {currentLang === lang.code && <Check size={12} />}
+                    {language === lang.code && <Check size={12} />}
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
             className="w-9 h-9 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-colors"

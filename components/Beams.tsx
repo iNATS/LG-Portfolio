@@ -2,18 +2,13 @@ import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Type definitions for React Three Fiber elements to satisfy TypeScript
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      mesh: any;
-      group: any;
-      planeGeometry: any;
-      meshBasicMaterial: any;
-      sphereGeometry: any;
-    }
-  }
-}
+// Use local constants for non-standard JSX tags to avoid polluting global JSX.IntrinsicElements.
+// This prevents standard HTML tags (div, span, etc.) from being shadowed and missing from the JSX namespace.
+const Mesh = 'mesh' as any;
+const Group = 'group' as any;
+const PlaneGeometry = 'planeGeometry' as any;
+const MeshBasicMaterial = 'meshBasicMaterial' as any;
+const SphereGeometry = 'sphereGeometry' as any;
 
 interface BeamsProps {
   beamWidth?: number;
@@ -39,9 +34,9 @@ const BeamUnit = ({ position, rotation, scale, color, speed, height, width }: an
   });
 
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation} scale={scale}>
-      <planeGeometry args={[width, height]} />
-      <meshBasicMaterial
+    <Mesh ref={meshRef} position={position} rotation={rotation} scale={scale}>
+      <PlaneGeometry args={[width, height]} />
+      <MeshBasicMaterial
         color={new THREE.Color(color)}
         opacity={0.06}
         transparent
@@ -49,7 +44,7 @@ const BeamUnit = ({ position, rotation, scale, color, speed, height, width }: an
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
-    </mesh>
+    </Mesh>
   );
 };
 
@@ -83,7 +78,7 @@ const Scene = ({ beamNumber, beamWidth, beamHeight, lightColor, speed, scale, ro
   }, [beamNumber]);
 
   return (
-    <group ref={groupRef} scale={[scale, scale, scale]}>
+    <Group ref={groupRef} scale={[scale, scale, scale]}>
       {beams.map((props, i) => (
         <BeamUnit
           key={i}
@@ -96,17 +91,17 @@ const Scene = ({ beamNumber, beamWidth, beamHeight, lightColor, speed, scale, ro
       ))}
       
       {/* Central glow to hide origin */}
-      <mesh>
-        <sphereGeometry args={[2, 32, 32]} />
-        <meshBasicMaterial 
+      <Mesh>
+        <SphereGeometry args={[2, 32, 32]} />
+        <MeshBasicMaterial 
             color={lightColor} 
             transparent 
             opacity={0.02} 
             blending={THREE.AdditiveBlending} 
             depthWrite={false}
         />
-      </mesh>
-    </group>
+      </Mesh>
+    </Group>
   );
 };
 
