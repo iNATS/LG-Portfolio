@@ -1,8 +1,14 @@
+
 import { GoogleGenAI } from "@google/genai";
-import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS, OWNER_ROLE } from '../constants';
+// Fixed imports: replaced SKILLS with SKILLS_DATA and ensured projects/skills are handled as functions
+import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS_DATA, OWNER_ROLE } from '../constants';
+
+// Get English versions for context as the AI primarily responds in English or can translate
+const currentProjects = PROJECTS('en');
+const currentSkills = SKILLS_DATA('en');
 
 // Group skills by category for better context in the prompt
-const skillsByCategory = SKILLS.reduce((acc, skill) => {
+const skillsByCategory = currentSkills.reduce((acc, skill) => {
   if (!acc[skill.category]) acc[skill.category] = [];
   acc[skill.category].push(skill.name);
   return acc;
@@ -12,17 +18,17 @@ const formattedSkills = Object.entries(skillsByCategory)
   .map(([category, items]) => `- ${category}: ${items.join(', ')}`)
   .join('\n');
 
-// Construct a system prompt based on the portfolio data
+// Construct a system prompt based on the portfolio data using English values (.en)
 const SYSTEM_INSTRUCTION = `
-You are an AI assistant for ${OWNER_NAME}'s portfolio website. 
-Your role is to answer questions about ${OWNER_NAME} professionally and concisely, acting as their virtual representative.
+You are an AI assistant for ${OWNER_NAME.en}'s portfolio website. 
+Your role is to answer questions about ${OWNER_NAME.en} professionally and concisely, acting as their virtual representative.
 
-Here is the context about ${OWNER_NAME}:
-Role: ${OWNER_ROLE}
-Bio: ${OWNER_BIO}
+Here is the context about ${OWNER_NAME.en}:
+Role: ${OWNER_ROLE.en}
+Bio: ${OWNER_BIO.en}
 
 Projects:
-${PROJECTS.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
+${currentProjects.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
 
 Skills:
 ${formattedSkills}

@@ -19,7 +19,15 @@ interface AdminPanelProps {
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
 
-const VisionModal = ({ isOpen, onClose, title, children }: { isOpen: boolean, onClose: () => void, title: string, children: React.ReactNode }) => {
+// Fixed VisionModal typing by using React.FC to handle children correctly
+interface VisionModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    children: React.ReactNode;
+}
+
+const VisionModal: React.FC<VisionModalProps> = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">

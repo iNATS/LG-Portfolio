@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Skill, PersonalInfo, Testimonial, AppSettings, Meeting, Notification } from '../types';
-import { PROJECTS, SKILLS, TESTIMONIALS, PERSONAL_INFO } from '../constants';
+// Fixed imports from constants to match exported members
+import { PROJECTS, SKILLS_DATA, TESTIMONIALS_DATA, PERSONAL_INFO } from '../constants';
 
 interface DataContextType {
   personalInfo: PersonalInfo;
@@ -43,11 +44,11 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize state
-  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>(PERSONAL_INFO);
+  // Initialize state by calling constants functions with default 'en' language
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>(PERSONAL_INFO('en'));
   
   // Map projects to have a default status and new PM fields if missing
-  const [projects, setProjects] = useState<Project[]>(PROJECTS.map(p => ({
+  const [projects, setProjects] = useState<Project[]>(PROJECTS('en').map(p => ({
     ...p, 
     status: p.status || 'done',
     priority: p.priority || 'medium',
@@ -55,8 +56,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dueDate: p.dueDate || ''
   })));
   
-  const [skills, setSkills] = useState<Skill[]>(SKILLS);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(TESTIMONIALS);
+  const [skills, setSkills] = useState<Skill[]>(SKILLS_DATA('en'));
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(TESTIMONIALS_DATA('en'));
   
   const [messages, setMessages] = useState<any[]>([
     { id: 1, from: 'client@google.com', subject: 'Project Inquiry', date: '2023-10-15', read: false, body: "Hi, we love your work. Are you available?" },
@@ -165,16 +166,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetToDefaults = () => {
-    setPersonalInfo(PERSONAL_INFO);
-    setProjects(PROJECTS.map(p => ({
+    // Reset by re-calling constants with English defaults
+    setPersonalInfo(PERSONAL_INFO('en'));
+    setProjects(PROJECTS('en').map(p => ({
         ...p, 
         status: 'done',
         priority: 'medium',
         budget: 0,
         dueDate: ''
     })));
-    setSkills(SKILLS);
-    setTestimonials(TESTIMONIALS);
+    setSkills(SKILLS_DATA('en'));
+    setTestimonials(TESTIMONIALS_DATA('en'));
     pushNotification('info', 'System reset to defaults');
   };
 
