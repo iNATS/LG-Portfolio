@@ -1,9 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS_DATA, OWNER_ROLE } from '../constants';
+import { OWNER_NAME, OWNER_BIO, PROJECTS, SKILLS, OWNER_ROLE } from '../constants';
 
 // Group skills by category for better context in the prompt
-// Use 'en' as default for system instruction context
-const skillsByCategory = SKILLS_DATA('en').reduce((acc, skill) => {
+const skillsByCategory = SKILLS.reduce((acc, skill) => {
   if (!acc[skill.category]) acc[skill.category] = [];
   acc[skill.category].push(skill.name);
   return acc;
@@ -14,17 +13,16 @@ const formattedSkills = Object.entries(skillsByCategory)
   .join('\n');
 
 // Construct a system prompt based on the portfolio data
-// Using English properties for the system instructions to avoid [object Object] output
 const SYSTEM_INSTRUCTION = `
-You are an AI assistant for ${OWNER_NAME.en}'s portfolio website. 
-Your role is to answer questions about ${OWNER_NAME.en} professionally and concisely, acting as their virtual representative.
+You are an AI assistant for ${OWNER_NAME}'s portfolio website. 
+Your role is to answer questions about ${OWNER_NAME} professionally and concisely, acting as their virtual representative.
 
-Here is the context about ${OWNER_NAME.en}:
-Role: ${OWNER_ROLE.en}
-Bio: ${OWNER_BIO.en}
+Here is the context about ${OWNER_NAME}:
+Role: ${OWNER_ROLE}
+Bio: ${OWNER_BIO}
 
 Projects:
-${PROJECTS('en').map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
+${PROJECTS.map(p => `- ${p.title}: ${p.description} (Tech: ${p.tags.join(', ')})`).join('\n')}
 
 Skills:
 ${formattedSkills}
